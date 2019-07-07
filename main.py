@@ -25,7 +25,11 @@ def error(bot, update):
 
 
 def main():
-    updater = Updater("TOKEN")
+    try:
+        token = sys.argv[1]
+    except IndexError:
+        token = os.environ.get("TOKEN")
+    updater = Updater(token)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
