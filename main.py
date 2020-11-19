@@ -1,48 +1,60 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os
 import sys
 import logging
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import (
+    Update,
+)
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    CallbackContext,
+)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(format="%(name)s - %(message)s", level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
 
-def start(update, context):
-    update.message.reply_text('Hi!')
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Hi!")
 
 
-def help(update, context):
-    update.message.reply_text('Help!')
+def help_command(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Help!")
 
 
-def echo(update, context):
+def echo(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(update.message.text)
 
 
-def error(update, context):
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
-def main():
+def main() -> None:
     try:
-        TOKEN = sys.argv[1]
+        token = sys.argv[1]
     except IndexError:
-        TOKEN = os.environ.get("TOKEN")
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(MessageHandler(Filters.text, echo))
-    dp.add_error_handler(error)
+        try:
+            with open("token.txt", "r") as token_file:
+                token = token_file.read().strip("\n")
+        except:
+            logger.error("Add bot token to token.txt file before running!")
+            sys.exit()
+
+    updater = Updater(token)
+
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("help", help_command))
+
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+
     updater.start_polling()
     logger.info("Ready to rock..!")
     updater.idle()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
